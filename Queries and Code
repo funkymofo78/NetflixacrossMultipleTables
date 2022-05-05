@@ -1,0 +1,153 @@
+--Find the title of the series and the rank of the production manager for each series.
+
+SELECT netflixseries.Title,Managers.Name FROM netflixseries 
+JOIN Managers ON netflixseries. Manager_ID = Managers.ID 
+
+--Find the title of each series managed by a junior production manager.
+
+SELECT netflixseries.Title,Managers.Rank FROM netflixseries JOIN Managers 
+ON netflixseries. Manager_ID = Managers.ID WHERE Managers.Rank="Junior"
+
+--Find the number of series managed by each production manager.
+
+SELECT COUNT(netflixseries.Title), Managers.Name FROM netflixseries JOIN Managers
+ ON netflixseries. Manager_ID = Managers.ID GROUP BY Managers.Name
+
+--Find the names of the series managed by production managers aged above 45.
+
+SELECT netflixseries.Title, Managers.Name FROM netflixseries JOIN Managers ON netflixseries. Manager_ID
+ = Managers.ID Where Managers.Age >=45 GROUP BY Managers.Name
+
+
+-- Find the number of episodes for series managed by each production manager who is aged
+above 45.
+
+SELECT COUNT(netflixseries.Episodes), Managers.Name FROM netflixseries JOIN Managers ON netflixseries. Manager_ID = 
+Managers.ID Where Managers.Age >=45 GROUP BY Managers.Name
+
+Find the number of series released before 1st June 2015 managed by senior producers aged
+more than 55.
+
+SELECT COUNT(netflixseries.Title), Managers.Name FROM netflixseries JOIN Managers 
+ON netflixseries. Manager_ID = Managers.ID Where Managers.Age >=55 AND Managers.rank="Senior"
+AND netflixseries.PremiereDate<"2015-06-01" GROUP BY Managers.Name
+
+-- Find the location and the number of production managers based in each location.
+
+SELECT Locations.Name, COUNT(Managers.Name) FROM Locations JOIN Managers 
+ON Managers.Location_ID = Locations.ID GROUP by Locations.Name
+
+
+--Find the number, minimum age, average age and maximum age of production managers
+at each location.
+
+SELECT Locations.Name, COUNT(Managers.Name), MAX(Managers.age), MIN(Managers.age), AVG(Managers.Age) FROM Locations Join Managers on 
+Managers.Location_ID = Locations.ID GROUP by Locations.Name
+
+--Find the title of each series, the name of the production manager and the location of the
+manager.
+
+SELECT netflixseries.Title, Managers.Name, Locations.Name FROM 
+(netflixseries JOIN Managers ON netflixseries.Manager_ID =
+ Managers.ID) JOIN Locations ON Managers.Location_ID= Locations.ID
+
+SELECT netflixseries.Title, Managers.Name AS Manager, Locations.Name AS Locations FROM netflixseries JOIN Managers JOIN Locations WHERE 
+netflixseries.Manager_ID = Managers.ID AND Managers.Location_ID = Locations.ID
+
+
+-- Find the number of series of each genre managed by a production manager based in Dallas.
+
+SELECT COUNT(netflixseries.Title), netflixseries.MajorGenre FROM netflixseries JOIN Managers JOIN Locations WHERE netflixseries.Manager_ID = Managers.ID AND Managers.Location_ID = 
+Locations.ID AND Locations.Name = "Dallas" GROUP BY netflixseries.MajorGenre
+
+SELECT COUNT(netflixseries.Title), netflixseries.MajorGenre FROM netflixseries JOIN Managers ON netflixseries.Manager_ID = Manager_ID) JOIN Locations ON Managers.Location_ID = 
+Locations.ID WHERE Locations.Name = "Dallas" GROUP BY netflixseries.MajorGenre
+
+--Find the location and the number of episodes managed by production managers based at
+each location.
+
+SELECT Locations.Name, SUM(netflixseries.Episodes) FROM netflixseries JOIN Managers JOIN Locations WHERE netflixseries.Manager_ID =
+ Managers.ID AND Managers.Location_ID = Locations.ID GROUP BY Locations.Name
+ 
+--Find the location and the number of episodes managed by production managers based at
+--each location for production managers aged below 50.
+
+select count( netflixseries.Episodes ), Locations.Name as Location
+FROM netflixseries, ProductionManagers, Locations
+WHERE netflixseries.Manager_ID=ProductionManagers.ID and
+ProductionManagers.LocationID= Locations.ID AND ProductionManagers.Age < 50
+group BY Locations.Name
+
+--Find the title, major genre, production location for series managed by production
+--managers of intermediate rank who are aged below 45.
+
+Select netflixseries.Title, netflixseries.MajorGenre, Locations.Name FROM netflixseries JOIN Managers 
+ON netflixseries.Manager_ID = Managers.ID JOIN Locations ON Managers.Location_ID = Locations.ID WHERE 
+Managers.age < 45 AND Managers.Rank = 'Intermediate'
+
+
+--Find the number of distinct major genres produced at each location.
+
+Select COUNT(DISTINCT(netflixseries.MajorGenre)) AS GenreCount, Locations.Name FROM netflixseries 
+JOIN Managers ON netflixseries.Manager_ID = Managers.ID JOIN Locations ON Managers.Location_ID =
+ Locations.ID GROUP BY Locations.Name
+ 
+-- Find the cost of a series(in million of dollars) depends on the number of episodes with the
+following equation representing a rough approximation. Cost = 20 +
+2*(Episodes^0.96). Show the location and the total estimated cost of series produced
+
+Select 20 + 2*(SUM(netflixseries.Episodes)^0.96) AS EstCost, Locations.Name FROM netflixseries JOIN 
+Managers ON netflixseries.Manager_ID = Managers.ID JOIN Locations ON Managers.Location_ID = 
+Locations.ID GROUP BY Locations.Name
+at each location. Use the AS option to name this calculated field “EstCost”.
+
+
+----------------------------------------------------------------------------------------------------------------------------------------------
+
+Demonstarting the use of derived tables
+
+-- Find the series with the highest number of episodes for each major genre type. Note that
+there could be more than one series with the highest number of episodes within a
+genre type.
+
+SELECT netflixseries.Title
+FROM
+(SELECT MAX(netflixseries.Episodes) AS maxEp,
+ netflixseries.MajorGenre
+FROM netflixseries
+GROUP By netflixseries.MajorGenre) AS Max_Genre	
+JOIN netflixseries ON max_Genre.maxEp = 
+netflixseries.Episodes AND netflixseries.MajorGenre = 
+max_Genre.majorGenre
+
+--Find the title of the highest rated series and the production manager of that series for each
+--year for series only managed by a junior producer.
+
+SELECT netflixseries.Title, best_each_year.Max, best_each_year.PremiereYear FROM netflixseries 
+JOIN (select netflixseries.PremiereYear, max(netflixseries.IMDBRating) as Max FROM netflixseries 
+JOIN Managers on netflixseries.Manager_ID= Managers.ID WHERE Managers.Rank="Junior" GROUP BY 
+netflixseries.PremiereYear) best_each_year on netflixseries.PremiereYear=best_each_year.PremiereYear and 
+netflixseries.IMDBRating= best_each_year.Max ORDER BY netflixseries.PremiereYear
+
+
+--Find the highest rated series produced at each location.
+
+SELECT netflixseries.Title, d1.rating, d1.loc FROM (select max(netflixseries.IMDBRating) rating, 
+Locations.Name loc from netflixseries, Managers,Locations WHERE netflixseries.Manager_ID=Managers.ID and 
+Managers.Location_ID= Locations.ID group by Locations.Name) as d1, netflixseries, Managers, Locations WHERE 
+netflixseries.Manager_ID = Managers.ID AND Managers.Location_ID=Locations.ID AND d1.rating = 
+netflixseries.IMDBRating and d1.loc = Locations.Name
+
+
+--Find the  manager who has produced the highest total number of episodes at each location.
+
+Derived table 
+SELECT SUM(netflixseries.Episodes), Managers.Name
+FROM netflixseries, Managers
+WHERE netflixseries.Manager_ID=Managers.ID
+GROUP BY Managers.Name
+
+SELECT max(d1.sum), Locations.Name, d1.man FROM (SELECT SUM(netflixseries.Episodes) 
+sum, Managers.Name man, Managers.Location_ID loc FROM netflixseries, Managers WHERE netflixseries.Manager_ID=Managers.ID GROUP
+ BY Managers.Name) d1, Locations where d1.loc = Locations.ID GROUP BY Locations.Name
+
